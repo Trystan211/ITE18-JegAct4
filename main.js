@@ -115,6 +115,9 @@ for (let i = 0; i < 30; i++) {
   // Position the tree group
   treeGroup.position.set(position.x, 0, position.z);
 
+   // SCALE the tree group here!
+  treeGroup.scale.set(2, 2, 2); // Makes all trees 2x bigger
+  
   // Add tree group to the scene and store it
   scene.add(treeGroup);
   trees.push(treeGroup);

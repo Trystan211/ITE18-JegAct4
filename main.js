@@ -2,181 +2,144 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.152.0/build/three.m
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.152.0/examples/jsm/loaders/GLTFLoader.js';
 
-// Scene Setup ni bb
+// Scene Setup for Sunny Tropical Scene
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffc8a3);
-scene.fog = new THREE.Fog(0xd56b4f, 10, 50);
+scene.background = new THREE.Color(0x87cefa); // Sky blue
+scene.fog = new THREE.Fog(0x87cefa, 20, 200);
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-camera.position.set(20, 10, 30);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 200);
+camera.position.set(30, 20, 50);
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
-// OrbitControls ni diri bb
+// OrbitControls for user interaction
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.25;
 
-// Pagsetup nis floor bb
+// Sandy ground setup
 const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(60, 60),
-  new THREE.MeshStandardMaterial({ color: 0x8b3e3e })
+  new THREE.PlaneGeometry(200, 200),
+  new THREE.MeshStandardMaterial({ color: 0xf4d9a0 }) // Sand color
 );
 ground.rotation.x = -Math.PI / 2;
 scene.add(ground);
 
-// Lights ni bb, naay ambient og directional
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+// Ambient and directional lighting for the scene
+const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
 scene.add(ambientLight);
 
-const sunlight = new THREE.DirectionalLight(0xffd4a6, 0.6);
-sunlight.position.set(10, 20, -5);
+const sunlight = new THREE.DirectionalLight(0xffe9b1, 0.6);
+sunlight.position.set(50, 100, -30);
 scene.add(sunlight);
 
-// Restricted Area ni para dili magpatakag spawn ang mga tae na black sa tunga sa shrine(Shrine Center)
+// Restricted area for a central beach umbrella feature
 let restrictedArea = {
   x: 0,
   z: 0,
   radius: 15
 };
 
-// Checker ni if naay position outside sa restricted area
+// Function to check if a position is outside the restricted area
 function isOutsideRestrictedArea(x, z) {
   const dx = x - restrictedArea.x;
   const dz = z - restrictedArea.z;
   return Math.sqrt(dx * dx + dz * dz) >= restrictedArea.radius;
 }
 
-// Maka kuha kag random position gawas sa restricted area kung naay maka sulod na tae na black
+// Function to get a random position outside the restricted area
 function getRandomPositionOutsideRestrictedArea() {
   let x, z;
   do {
-    x = Math.random() * 50 - 25;
-    z = Math.random() * 50 - 25;
+    x = Math.random() * 160 - 80;
+    z = Math.random() * 160 - 80;
   } while (!isOutsideRestrictedArea(x, z));
   return { x, z };
 }
 
-// I import nato ang tae na shrine model
+// Load a beach umbrella model at the center
 const loader = new GLTFLoader();
 loader.load(
-  'https://trystan211.github.io/test_joshua/fox_stone_statue_handpainted_kitsune.glb',
+  'https://example.com/beach_umbrella_model.glb', // Replace with your umbrella model URL
   (gltf) => {
-    const shrine = gltf.scene;
+    const umbrella = gltf.scene;
+    umbrella.position.set(restrictedArea.x, 0, restrictedArea.z);
+    umbrella.scale.set(8, 8, 8);
+    scene.add(umbrella);
 
-    shrine.position.set(restrictedArea.x, -0.5, restrictedArea.z);
-    shrine.scale.set(310, 310, 310); // dako ni kay gamayay siya na shit
-    scene.add(shrine);
-
-    // Calculate ang bounding box niya og i update ang restricted radius
-    const boundingBox = new THREE.Box3().setFromObject(shrine);
+    // Update restricted area radius based on the umbrella's size
+    const boundingBox = new THREE.Box3().setFromObject(umbrella);
     const size = new THREE.Vector3();
     boundingBox.getSize(size);
-    restrictedArea.radius = Math.max(size.x, size.z) / 2 + 1;
+    restrictedArea.radius = Math.max(size.x, size.z) / 2 + 3;
     console.log(`Restricted area radius updated: ${restrictedArea.radius}`);
   },
   undefined,
-  (error) => console.error('Error loading shrine model:', error)
+  (error) => console.error('Error loading umbrella model:', error)
 );
 
-// Trees og Mushrooms
-const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x5b341c });
-const leafMaterial = new THREE.MeshStandardMaterial({ color: 0xd35f45 });
-const mushroomMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+// Palm trees setup for the tropical scene
+const trunkMaterial = new THREE.MeshStandardMaterial({ color: 0x8b4513 });
+const leafMaterial = new THREE.MeshStandardMaterial({ color: 0x228b22 });
 
 const trees = [];
 
-for (let i = 0; i < 20; i++) {
+for (let i = 0; i < 30; i++) {
   const position = getRandomPositionOutsideRestrictedArea();
 
-  // Create a group para sa whole tree
+  // Create a tree group
   const treeGroup = new THREE.Group();
 
-  // Tree trunk ni bai
+  // Tree trunk
   const trunk = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.5, 0.5, 8),
+    new THREE.CylinderGeometry(0.5, 0.8, 10),
     trunkMaterial
   );
-  trunk.position.set(0, 4, 0);
+  trunk.position.set(0, 5, 0);
   treeGroup.add(trunk);
 
-  // Tree leaves or foliage ni bai
-  for (let j = 0; j < 4; j++) {
-    const foliage = new THREE.Mesh(
-      new THREE.ConeGeometry(5 - j * 1.5, 4),
+  // Palm leaves
+  for (let j = 0; j < 5; j++) {
+    const leaf = new THREE.Mesh(
+      new THREE.ConeGeometry(4, 1, 8),
       leafMaterial
     );
-    foliage.position.set(0, 8 + j * 2.5, 0);
-    treeGroup.add(foliage);
+    leaf.rotation.x = Math.PI / 2;
+    leaf.position.set(0, 10, 0);
+    leaf.rotation.z = (j * Math.PI) / 2.5;
+    treeGroup.add(leaf);
   }
 
-  // Position sa whole tree group, iset nato kay mabuang siyag di
+  // Position the tree group
   treeGroup.position.set(position.x, 0, position.z);
 
-  // i Add ang tree group sa scene og i store for interaction bai
+  // Add tree group to the scene and store it
   scene.add(treeGroup);
   trees.push(treeGroup);
 }
 
-// I import na nato ang fox models bai
-loader.load(
-  'https://trystan211.github.io/test_joshua/low_poly_fox.glb',
-  (gltf) => {
-    for (let i = 0; i < 5; i++) {
-      const position = getRandomPositionOutsideRestrictedArea();
-      const rotationY = Math.random() * Math.PI * 2;
-
-      const fox = gltf.scene.clone();
-      fox.position.set(position.x, 1, position.z);
-      fox.rotation.y = rotationY;
-      fox.scale.set(1, 1, 1);
-      scene.add(fox);
-    }
-  },
-  undefined,
-  (error) => console.error('Error loading fox model:', error)
-);
-
-// Rocks ni bai nga nahimong white bushes HAHAHAHAH
-const rockMaterial = new THREE.MeshStandardMaterial({
-  color: 0xffffff,
-  roughness: 0.9,
-  metalness: 0.1
-});
-
-for (let i = 0; i < 15; i++) {
-  const position = getRandomPositionOutsideRestrictedArea();
-
-  const rock = new THREE.Mesh(
-    new THREE.IcosahedronGeometry(Math.random() * 2 + 1, 1),
-    rockMaterial
-  );
-  rock.position.set(position.x, 0.5, position.z);
-  scene.add(rock);
-}
-
-// Red leaf particles ni bai
-const particleCount = 1000;
+// Floating water droplets (particles)
+const particleCount = 2000;
 const particlesGeometry = new THREE.BufferGeometry();
 const positions = [];
 const velocities = [];
 
 for (let i = 0; i < particleCount; i++) {
   positions.push(
-    Math.random() * 100 - 50, // X
-    Math.random() * 50 + 10,  // Y
-    Math.random() * 100 - 50 // Z
+    Math.random() * 200 - 100, // X
+    Math.random() * 50 + 20,   // Y
+    Math.random() * 200 - 100 // Z
   );
-  velocities.push(0, Math.random() * -0.1, 0); // Falling effect ni siya bai
+  velocities.push(0, Math.random() * -0.1, 0); // Floating effect
 }
 
 particlesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 particlesGeometry.setAttribute('velocity', new THREE.Float32BufferAttribute(velocities, 3));
 
 const particlesMaterial = new THREE.PointsMaterial({
-  color: 0xb94e48,
+  color: 0x87ceeb,
   size: 0.5,
   transparent: true,
   opacity: 0.8
@@ -185,7 +148,7 @@ const particlesMaterial = new THREE.PointsMaterial({
 const particles = new THREE.Points(particlesGeometry, particlesMaterial);
 scene.add(particles);
 
-// Raycaster para sa tree interaction ni bb
+// Raycaster for tree interaction
 const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
@@ -195,44 +158,42 @@ window.addEventListener('click', (event) => {
 
   raycaster.setFromCamera(mouse, camera);
 
-  const intersects = raycaster.intersectObjects(trees, true); // Gamit tag `true` para sa recursive checking
+  const intersects = raycaster.intersectObjects(trees, true);
   if (intersects.length > 0) {
     const treeGroup = intersects[0].object.parent;
 
-    // Change size og color para sa tanan parts sa tree, actually bug ni diri pero feature na
-    treeGroup.scale.multiplyScalar(1.2);
+    // Change color to white (coconut flower effect)
     treeGroup.children.forEach((child) => {
       if (child.material) {
-        child.material.color.set(0x4b2a17); // Darker color ra
+        child.material.color.set(0xfffdd0); // Pale white
       }
     });
 
-    // Revert changes after 2 seconds ni bai
+    // Revert color after 2 seconds
     setTimeout(() => {
-      treeGroup.scale.multiplyScalar(1 / 1.2);
       treeGroup.children.forEach((child) => {
         if (child.material) {
           child.material.color.set(
-            child.geometry.type === 'ConeGeometry' ? 0xd35f45 : 0x5b341c // Reset sa original color
+            child.geometry.type === 'ConeGeometry' ? 0x228b22 : 0x8b4513
           );
         }
       });
-    }, 2000); // 2 seconds pasabot ani bai
+    }, 2000);
   }
 });
 
-// I loop ang animation
+// Animation loop
 const clock = new THREE.Clock();
 
 const animate = () => {
-  // Update sa particles
+  // Update water particles
   const positions = particlesGeometry.attributes.position.array;
   const velocities = particlesGeometry.attributes.velocity.array;
 
   for (let i = 0; i < particleCount; i++) {
-    positions[i * 3 + 1] += velocities[i * 3 + 1]; // Y position falls ni
+    positions[i * 3 + 1] += velocities[i * 3 + 1];
     if (positions[i * 3 + 1] < 0) {
-      positions[i * 3 + 1] = Math.random() * 50 + 10; // Reset particle sa top para looping ba naunsa
+      positions[i * 3 + 1] = Math.random() * 50 + 20;
     }
   }
 
@@ -245,7 +206,7 @@ const animate = () => {
 
 animate();
 
-// Mao ni mag handle sa Window resize
+// Handle window resize
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();

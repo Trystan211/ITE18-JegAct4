@@ -62,7 +62,7 @@ function getRandomPositionOutsideRestrictedArea() {
 // Load a beach umbrella model at the center
 const loader = new GLTFLoader();
 loader.load(
-  'https://trystan211.github.io/test_joshua/gazebo_1.glb', 
+  'https://trystan211.github.io/ITE18-JegAct4/test_joshua/gazebo_1.glb', 
   (gltf) => {
     const umbrella = gltf.scene;
     umbrella.position.set(restrictedArea.x, 0, restrictedArea.z);
